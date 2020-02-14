@@ -60,7 +60,7 @@ namespace SSDTBuilder
                 }
             }
 
-            _log.Success("Build complete. Elapsed {0:F3}s.", stopwatch.Elapsed.TotalSeconds);
+            _log.Success("\nBuild complete. Elapsed {0:F3}s.", stopwatch.Elapsed.TotalSeconds);
             if (_options.GenerateDacPac)
                 _log.Success("  Dacpac: " + _dacpacFilename ?? "N/A");
             if (_options.GenerateScript)
@@ -74,17 +74,16 @@ namespace SSDTBuilder
             _log.Info("Building script...");
 
             _log.Verbose("DacPackage loading...");
-            var package = DacPackage.Load(dacpac, dacpac is MemoryStream ? DacSchemaModelStorageType.Memory : DacSchemaModelStorageType.File);
+            var package = DacPackage.Load(dacpac, DacSchemaModelStorageType.Memory);
 
             var dacOptions = GetDacDeployOptions();
             var targetDbName = GetTargetDatabaseName();
             _log.Verbose("Transforming dacpac to create script.");
             var script = DacServices.GenerateCreateScript(package, targetDbName, dacOptions);
 
-            var scriptFileName = GetScriptFilename();
-            using (var output = File.CreateText(scriptFileName))
+            using (var output = GetScriptStreamWriter())
                 output.Write(script);
-            _log.Success("Build script created ({0:N0}kb): {1}", script.Length / 1024f, scriptFileName);
+            _log.Success("Schema script created. Total {0:N0}kb.", script.Length / 1024f);
 
             if (_options.CopyLooseScripts)
             {
@@ -98,14 +97,27 @@ namespace SSDTBuilder
                     string dest = Path.Combine(_options.Output, file.Path, file.Filename);
                     CopyLooseFile(src, dest);
                 }
-                _log.Success("Loose file(s) copied ({0}).", looseFiles.Count);
+                _log.Success("{0} loose file(s) copied..", looseFiles.Count);
             }
         }
 
         private void EnsureDirectory(string dir)
         {
-            if (!Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
+        }
+
+        private StreamWriter GetScriptStreamWriter()
+        {
+            var scriptFileName = GetScriptFilename();
+
+            // In case script filename contains a directory, make sure it exists.
+            // Eg: /subfolder/script.sql
+            EnsureDirectory(Path.GetDirectoryName(scriptFileName));
+
+            _log.Success("Using output schema script {0}", scriptFileName);
+
+            return File.CreateText(scriptFileName);
         }
 
         private void CopyLooseFile(string src, string dest)
@@ -187,6 +199,8 @@ namespace SSDTBuilder
             if (_options.GenerateDacPac)
             {
                 _dacpacFilename = GetDacpacFilename();
+                // In case dac filename is composite (containds dir), ensure it exists
+                EnsureDirectory(Path.GetDirectoryName(_dacpacFilename));
                 return new FileStream(_dacpacFilename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             }
 
