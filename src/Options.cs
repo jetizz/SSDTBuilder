@@ -35,7 +35,7 @@ namespace SSDTBuilder
         [Option("target-dac-version", Default = "1.0.0", HelpText = "Dacpac version.")]
         public string TargetDacVersion { get; set; }
 
-        [Option("create-new-db", HelpText = "If set, script will have DROP IF EXISTS and CREATE DATABASE statements..")]
+        [Option("create-new-db", HelpText = "If set, script will have DROP IF EXISTS and CREATE DATABASE statements.")]
         public bool CreateNewDatabase { get; internal set; }
 
         [Option("silent", HelpText = "When set, no messages are emitted.")]
@@ -44,9 +44,11 @@ namespace SSDTBuilder
         [Option("verbose", HelpText = "When set, all messages are emitted.")]
         public bool IsVerbose { get; set; }
 
+        [Option("sqlserver-version", Default = "Sql150", HelpText = "Specific SQL Server releases. See https://docs.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.dac.model.sqlserverversion.")]
+        public string SqlServerVersion { get; set; }
+        
         //[Option("runner", Default = "None", HelpText = "Options: none | linux | windows.")]
         //public string GenerateRunner { get; set; }
-
 
         public bool GenerateDacPac => !string.IsNullOrEmpty(DacpacName);
 

@@ -32,10 +32,14 @@ namespace SSDTBuilder
 
             LoadDacProfile();
 
-            TSqlModel model = new TSqlModel(SqlServerVersion.Sql150, new TSqlModelOptions { });
+            if (!Enum.TryParse(_options.SqlServerVersion, out SqlServerVersion sqlServerVersion))
+                sqlServerVersion = SqlServerVersion.Sql150;
+
+            TSqlModel model = new TSqlModel(sqlServerVersion, new TSqlModelOptions { });
+            //model.EngineVersion = _options.EngineVersion;
             PackageMetadata meta = new PackageMetadata { 
                 Name = _options.TargetDacVersion, 
-                Version = _options.TargetDacVersion 
+                Version = _options.TargetDacVersion,
             };
 
             _log.Info("Loading build files...");
