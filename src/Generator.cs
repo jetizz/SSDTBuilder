@@ -56,7 +56,7 @@ namespace SSDTBuilder
                 _log.Info("Building dacpac...");
                 DacPackageExtensions.BuildPackage(buffer, model, meta);
                 buffer.Seek(0, SeekOrigin.Begin);
-                _log.Success("Dacpac generated ({0}).", _options.GenerateDacPac ? "in-memory" : "file");
+                _log.Success("Dacpac generated ({0}).", _options.GenerateDacPac ? "file" : "in-memory");
 
                 if (_options.GenerateScript)
                 {
